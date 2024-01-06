@@ -14,40 +14,54 @@
 
 package strings
 
-import "github.com/maruel/natural"
+import (
+	"sort"
+	"strings"
 
-type SortByLengthAsc []string
+	"github.com/maruel/natural"
+)
 
-func (a SortByLengthAsc) Len() int {
+// SplitSortReversed is a wrapper around strings.Split and reverses
+// the order of the results
+func SplitSortReversed(input, separator string) (split []string) {
+	split = strings.Split(input, separator)
+	sort.Slice(split, func(i, j int) (less bool) {
+		less = i > j
+		return
+	})
+	return
+}
+
+// SortedByLastName returns a natual-sorted list of the full
+// names given
+func SortedByLastName(fullNames []string) (sorted []string) {
+	lookup := make(map[int]string)
+	for idx, key := range fullNames {
+		lookup[idx] = LastName(key)
+		sorted = append(sorted, key)
+	}
+	sort.Slice(sorted, func(i, j int) (less bool) {
+		less = natural.Less(lookup[i], lookup[j])
+		return less
+	})
+	return
+}
+
+// SortByLength implements the sort.Interface, sorting the slice from longest
+// to shortest and sorting equal length strings using natural.Less
+type SortByLength []string
+
+func (a SortByLength) Len() int {
 	return len(a)
 }
 
-func (a SortByLengthAsc) Less(i, j int) bool {
-	// ASC is less-than
-	if len(a[i]) < len(a[j]) {
+func (a SortByLength) Less(i, j int) bool {
+	if len(a[i]) > len(a[j]) {
 		return true
 	}
 	return natural.Less(a[i], a[j])
 }
 
-func (a SortByLengthAsc) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
-type SortByLengthDesc []string
-
-func (a SortByLengthDesc) Len() int {
-	return len(a)
-}
-
-func (a SortByLengthDesc) Less(i, j int) bool {
-	// DESC is greater-than
-	if len(a[i]) > len(a[j]) {
-		return true
-	}
-	return natural.Less(a[j], a[i])
-}
-
-func (a SortByLengthDesc) Swap(i, j int) {
+func (a SortByLength) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }

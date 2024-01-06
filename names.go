@@ -15,76 +15,61 @@
 package strings
 
 import (
-	"sort"
 	"strings"
 
+	fullname "github.com/amonsat/fullname_parser"
 	"github.com/iancoleman/strcase"
-	"github.com/maruel/natural"
-
-	"github.com/go-corelibs/regexps"
-	"github.com/go-corelibs/slices"
+	"github.com/weppos/publicsuffix-go/publicsuffix"
 )
 
-var nameSuffixes = []string{
-	"jr", "sr",
-	"i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
-	"xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx",
-	"xxi", "xxii", "xxiii", "xxiv", "xxv", "xxvi", "xxvii", "xxviii", "xxix", "xxx",
-	"xxxi", "xxxii", "xxxiii", "xxxiv",
-}
-
-// TODO: figure out a better way of decoding arbitrary "full name" strings, similarly to date/time language
-
+// FirstName is a wrapper around fullname_parser.ParseFullName
 func FirstName(fullName string) (firstName string) {
-	if names := regexps.RxKeywords.FindAllString(fullName, -1); len(names) > 0 {
-		for i := len(names) - 1; i >= 0; i-- {
-			firstName = names[i]
-			switch strings.ToLower(firstName) {
-			case "dr", "mr":
-				continue
-			}
-			break
-		}
-	}
+	// TODO: fork fullname_parser, seems unmaintained
+	parsed := fullname.ParseFullname(fullName)
+	firstName = parsed.First
 	return
 }
 
+// LastName is a wrapper around fullname_parser.ParseFullName
 func LastName(fullName string) (lastName string) {
-	if names := regexps.RxKeywords.FindAllString(fullName, -1); len(names) > 0 {
-		for i := len(names) - 1; i >= 0; i-- {
-			name := names[i]
-			if slices.Within(strings.ToLower(name), nameSuffixes) {
-				continue
+	parsed := fullname.ParseFullname(fullName)
+	lastName = parsed.Last
+	return
+}
+
+// ParseDomainName returns the given name split into is component
+// parts, in reverse order
+func ParseDomainName(input string) (tld, name string, subdomains []string) {
+	if parsed, err := publicsuffix.Parse(input); err == nil {
+		tld, name = parsed.TLD, parsed.SLD
+		if parsed.TRD != "" {
+			subdomains = SplitSortReversed(parsed.TRD, ".")
+		}
+		return
+	}
+	// fallback to always return something
+	list := SplitSortReversed(input, ".")
+	if count := len(list); count > 0 {
+		if tld = list[0]; count > 1 {
+			if name = list[1]; count > 2 {
+				subdomains = list[2:]
 			}
-			lastName = name
-			break
 		}
 	}
 	return
 }
 
-func SortedByLastName(data []string) (keys []string) {
-	lookup := make(map[string]string)
-	for _, key := range data {
-		lookup[key] = LastName(key)
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) (less bool) {
-		less = natural.Less(lookup[keys[i]], lookup[keys[j]])
-		return less
-	})
-	return
-}
-
+// NameFromEmail returns a user's default name based on just their
+// email address, intended to be used as an interesting placeholder
+// on a text input field for the user to supply something better
 func NameFromEmail(email string) (name string) {
-	if before, after, found := strings.Cut(email, "@"); found {
-		name = strcase.ToCamel(strcase.ToDelimited(before, ' '))
-		name += " @"
-		if parts := strings.Split(after, "."); len(parts) > 1 {
-			name += strcase.ToCamel(parts[len(parts)-2])
-		} else {
-			name += strcase.ToCamel(after)
-		}
+	// split the interesting parts
+	before, after, _ := strings.Cut(email, "@")
+	// make the name and check the after
+	if name = ToSpacedCamel(before); after != "" {
+		// suffix the name with a parsed domain
+		_, domain, _ := ParseDomainName(after)
+		name += " @" + strcase.ToCamel(domain)
 	}
 	return
 }

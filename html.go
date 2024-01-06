@@ -1,4 +1,4 @@
-// Copyright (c) 2023  The Go-Curses Authors
+// Copyright (c) 2024  The Go-Curses Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,27 +15,14 @@
 package strings
 
 import (
-	"bytes"
-	"io"
+	"strings"
 )
 
-var _ io.WriteCloser = (*ByteBuffer)(nil)
-
-// ByteBuffer is a wrapper around bytes.Buffer which implements the io.Closer
-// interface so that it can be used in io.WriteCloser contexts
-type ByteBuffer struct {
-	bytes.Buffer
-}
-
-// NewByteBuffer returns a new ByteBuffer instance
-func NewByteBuffer() (c *ByteBuffer) {
-	c = &ByteBuffer{}
+// EscapeHtmlAttribute trims any matching outer quotations (single or double),
+// replaces all double-quotes with `&quot;` and returns the result
+func EscapeHtmlAttribute(unescaped string) (escaped string) {
+	if unescaped != "" {
+		escaped = strings.ReplaceAll(TrimQuotes(unescaped), `"`, `&quot;`)
+	}
 	return
-}
-
-// Close fulfils the io.Closer interface and always returns nil because there
-// isn't anything to actually close
-func (c *ByteBuffer) Close() error {
-	// Noop
-	return nil
 }

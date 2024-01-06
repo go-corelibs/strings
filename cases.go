@@ -21,6 +21,9 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
+// PathToSnake trims any leading and trailing slashes and converts the
+// string to a snake_cased__directory_separated format where the
+// directory separator is two underscores
 func PathToSnake(path string) (snake string) {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
@@ -29,7 +32,8 @@ func PathToSnake(path string) (snake string) {
 	return
 }
 
-func ToCamelWords(text string) (capitalized string) {
+// ToTitleWords title-cases all words in the given text
+func ToTitleWords(text string) (capitalized string) {
 	// inspired by: https://stackoverflow.com/a/70284562
 	var within bool
 	characters := make([]rune, len(text))
@@ -50,29 +54,49 @@ func ToCamelWords(text string) (capitalized string) {
 	return
 }
 
-func ToSpaced(s string) (spaced string) {
-	spaced = strcase.ToDelimited(s, ' ')
+// ToSpaced is a wrapper around strcase.ToDelimited with a space delimiter
+func ToSpaced(text string) (spaced string) {
+	spaced = strcase.ToDelimited(text, ' ')
 	return
 }
 
-func ToSpacedCamel(s string) (spacedCamel string) {
-	spaced := strcase.ToDelimited(s, ' ')
-	spacedCamel = ToCamelWords(spaced)
+// ToSpacedTitle is a wrapper around ToSpaced and ToTitleWords
+func ToSpacedTitle(text string) (spacedTitle string) {
+	spaced := ToSpaced(text)
+	spacedTitle = ToTitleWords(spaced)
 	return
 }
 
-func ToDeepKey(s string) (deepKey string) {
-	parts := strings.Split(strings.TrimPrefix(s, "."), ".")
+// ToSpacedCamel is a wrapper around ToSpaced and strcase.ToCamel for each
+// word. The difference between ToSpacedTitle and ToSpacedCamel is in what
+// is considered a capital letter. ToSpacedTitle uses unicode.ToTitle to
+// figure that out while ToSpacedCamel uses strcase.ToCamel for that
+func ToSpacedCamel(text string) (spacedCamel string) {
+	spaced := ToSpaced(text)
+	fields := strings.Fields(spaced)
+	for idx := 0; idx < len(fields); idx++ {
+		fields[idx] = strcase.ToCamel(fields[idx])
+	}
+	spacedCamel = strings.Join(fields, " ")
+	return
+}
+
+// ToDeepKey converts go template variables like `.ThisThing.Variable` to a
+// map key used in like `.this-thing.variable`
+func ToDeepKey(text string) (deepKey string) {
+	parts := strings.Split(strings.TrimPrefix(text, "."), ".")
 	for _, part := range parts {
 		deepKey += "." + strcase.ToKebab(part)
 	}
 	return
 }
 
-func ToDeepVar(s string) (deepKey string) {
-	parts := strings.Split(strings.TrimPrefix(s, "."), ".")
+// ToDeepVar is the opposite of ToDeepKey, translating `.this-thing.variable`
+// to `.ThisThing.Variable` format
+func ToDeepVar(text string) (deepVar string) {
+	parts := strings.Split(strings.TrimPrefix(text, "."), ".")
 	for _, part := range parts {
-		deepKey += "." + strcase.ToKebab(part)
+		deepVar += "." + strcase.ToCamel(part)
 	}
 	return
 }

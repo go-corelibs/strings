@@ -16,8 +16,6 @@ package strings
 
 import (
 	"fmt"
-	"html/template"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -25,76 +23,54 @@ import (
 	"github.com/iancoleman/strcase"
 
 	"github.com/go-corelibs/regexps"
-	"github.com/go-corelibs/slices"
 )
 
-func StringsToKebabs(in ...string) (out []string) {
-	for _, i := range in {
+// ToKebabs converts all the given strings to kebab-case
+func ToKebabs(inputs ...string) (out []string) {
+	for _, i := range inputs {
 		out = append(out, strcase.ToKebab(i))
 	}
 	return
 }
 
-func LowerStrings(in ...string) (out []string) {
+// ToLowers converts all the given strings to lower case
+func ToLowers(in ...string) (out []string) {
 	for _, i := range in {
 		out = append(out, strings.ToLower(i))
 	}
 	return
 }
 
-func TitleCase(input string) (output string) {
-	first := true
-	output = regexps.RxWord.ReplaceAllStringFunc(
-		strings.ToLower(input),
-		func(word string) string {
-			if !first {
-				switch word {
-				case "with", "in", "of", "at", "a", "the":
-					return word
-				}
-			}
-			first = false
-			return strcase.ToCamel(word)
-		},
-	)
-	return
-}
-
-var RxBasicMimeType = regexp.MustCompile(`^\s*([^\s;]*)\s*.+?\s*$`)
-
+// GetBasicMime removes the semicolon and any trailing bits from the given
+// mime string
 func GetBasicMime(mime string) (basic string) {
-	if RxBasicMimeType.MatchString(mime) {
-		m := RxBasicMimeType.FindAllStringSubmatch(mime, 1)
-		basic = m[0][1]
-		return
-	}
-	basic = mime
+	basic, _, _ = strings.Cut(mime, ";")
+	basic = strings.TrimSpace(basic)
 	return
 }
 
-// QuoteJsonValue will quote everything other than numbers or boolean text
-func QuoteJsonValue(in string) (out string) {
-	if regexps.RxQuoteStringsOnly.MatchString(in) {
-		return strings.ToLower(in)
+// QuoteJsonValue is intended to be used when marshalling json content and is
+// applied to only the json values as strings
+func QuoteJsonValue(value string) (out string) {
+	if value = strings.TrimSpace(value); value == "" {
+		return `""` // empty
+	} else if lower := strings.ToLower(value); lower == "true" || lower == "false" {
+		return lower // bool
+	} else if i, ee := strconv.Atoi(value); ee == nil {
+		return strconv.Itoa(i) // clean int
+	} else if _, eee := strconv.ParseFloat(value, 64); eee == nil {
+		return strings.TrimRight(value, "0")
 	}
-	out = fmt.Sprintf(`"%v"`, strings.ReplaceAll(in, `"`, `\"`))
+	// not any of the other types, just return quoted
+	out = fmt.Sprintf(`%q`, value)
 	return
 }
 
-func EscapeHtmlAttribute(unescaped string) (escaped string) {
-	var quote uint8
-	switch unescaped[0] {
-	case '"', '\'':
-		quote = unescaped[0]
-		last := len(unescaped) - 1
-		if unescaped[last] == quote {
-			unescaped = unescaped[1 : last-1]
-		}
-	}
-	escaped = strings.ReplaceAll(unescaped, `"`, "&quot;")
-	return
-}
-
+// IsTrue returns true if the text given is a truthy word or any positive number
+//
+// Truthy words:
+//
+//	"true", "t", "yes", "y" and "on"
 func IsTrue(text string) bool {
 	switch strings.ToLower(text) {
 	case "true", "yes", "on", "1", "t", "y":
@@ -102,10 +78,18 @@ func IsTrue(text string) bool {
 	}
 	if v, err := strconv.Atoi(text); err == nil {
 		return v > 0
+	} else if f, err := strconv.ParseFloat(text, 64); err == nil {
+		return f > 0.0
 	}
 	return false
 }
 
+// IsFalse returns true if the text given is a (case-insensitive) falsey word
+// or a number that is less than or equal to zero.
+//
+// Falsey words is:
+//
+//	"false", "f", "no", "n" and "off"
 func IsFalse(text string) bool {
 	switch strings.ToLower(text) {
 	case "false", "no", "off", "0", "f", "n", "":
@@ -113,6 +97,8 @@ func IsFalse(text string) bool {
 	}
 	if v, err := strconv.Atoi(text); err == nil {
 		return v <= 0
+	} else if f, err := strconv.ParseFloat(text, 64); err == nil {
+		return f <= 0.0
 	}
 	return false
 }
@@ -146,99 +132,22 @@ func TrimQuotes(maybeQuoted string) (unquoted string) {
 	return
 }
 
-func ParseHtmlTagAttributes(input interface{}) (attributes map[string]interface{}, err error) {
-	attributes = make(map[string]interface{})
-
-	parseAndUpdate := func(raw string) (e error) {
-		parts := regexps.RxSplitHtmlTagAttributes.Split(raw, -1)
-		for _, part := range parts {
-			if regexps.RxParseHtmlTagKeyOnly.MatchString(part) {
-				if m := regexps.RxParseHtmlTagKeyOnly.FindAllStringSubmatch(part, -1); m != nil {
-					key := m[0][1]
-					attributes[key] = nil
-				}
-			} else if regexps.RxParseHtmlTagKeyValue.MatchString(part) {
-				if m := regexps.RxParseHtmlTagKeyValue.FindAllStringSubmatch(part, -1); m != nil {
-					key, quoted := m[0][1], m[0][2]
-					unquoted := TrimQuotes(quoted)
-					attributes[key] = unquoted
-				}
-			} else {
-				e = fmt.Errorf(`unsupported HTMLAttr format: %v`, part)
-				return
-			}
-		}
-		return
-	}
-
-	switch v := input.(type) {
-
-	case string:
-		err = parseAndUpdate(v)
-	case template.HTML:
-		err = parseAndUpdate(string(v))
-	case template.HTMLAttr:
-		err = parseAndUpdate(string(v))
-	case []string:
-		for _, tha := range v {
-			if err = parseAndUpdate(tha); err != nil {
-				return
-			}
-		}
-	case []template.HTML:
-		for _, tha := range v {
-			if err = parseAndUpdate(string(tha)); err != nil {
-				return
-			}
-		}
-	case []template.HTMLAttr:
-		for _, tha := range v {
-			if err = parseAndUpdate(string(tha)); err != nil {
-				return
-			}
-		}
-
-	default:
-		err = fmt.Errorf("unknown input type: (%T) %+v", v, v)
-	}
-	return
-}
-
+// UniqueFromSpaceSep splits the given value on spaces and only appends it to
+// the original slice if not already present, returning the updated results
 func UniqueFromSpaceSep(value string, original []string) (updated []string) {
-	updated = original
-	parts := regexps.RxSplitHtmlTagAttributes.Split(value, -1)
-	for _, part := range parts {
-		if !slices.Present(part, updated...) {
+	updated = original[:]
+	lookup := make(map[string]struct{})
+	for _, v := range updated {
+		lookup[v] = struct{}{}
+	}
+	for _, part := range strings.Split(value, " ") {
+		if part == "" {
+			continue
+		} else if _, present := lookup[part]; !present {
 			updated = append(updated, part)
 		}
 	}
 	return
-}
-
-func AddClassNamesToNjnBlock(data map[string]interface{}, classes ...string) map[string]interface{} {
-	if v, ok := data["class"]; ok {
-		var unique []string
-		switch t := v.(type) {
-		case string:
-			parts := regexps.RxSplitHtmlTagAttributes.Split(t, -1)
-			for _, p := range parts {
-				unique = UniqueFromSpaceSep(p, unique)
-			}
-			for _, c := range classes {
-				unique = UniqueFromSpaceSep(c, unique)
-			}
-		case []interface{}:
-			for _, iface := range t {
-				if s, ok := iface.(string); ok {
-					unique = UniqueFromSpaceSep(s, unique)
-				}
-			}
-		}
-		data["class"] = strings.Join(unique, " ")
-	} else {
-		data["class"] = strings.Join(classes, " ")
-	}
-	return data
 }
 
 func Empty(value string) (empty bool) {
@@ -246,22 +155,46 @@ func Empty(value string) (empty bool) {
 	return
 }
 
-func StripTmplTags(value string) (clean string) {
+// PruneTmplTags removes all go template statements, things wrapped in doubled
+// curly braces like: `{{ stuff }}`
+func PruneTmplTags(value string) (clean string) {
 	clean = regexps.RxTmplTags.ReplaceAllString(value, "")
 	return
 }
 
+// AppendWithSpace appends add to src with a space, ensuring that only one space
+// is separating the two given strings. If the add string starts with
+// punctuation, no space is used.
+//
+// AppendWithSpace is intended to be used within the Go-Enjin page format
+// features that need to join text with html constructs. The `.njn` block
+// format for example joins strings and json objects describing html elements
+// into the rendered output.
+//
+// Enjin Block Example:
+//
+//	{
+//	   "type": "p",
+//	   "text": [
+//	     "This sentence ends with a",
+//	     { "type": "a", "href": "https://go-enjin.org", "text": "link" },
+//	     "."
+//	   ]
+//	}
+//
+// Is rendered without a space between the "link" and the "." but does have
+// a space after the first sentence text.
 func AppendWithSpace(src, add string) (combined string) {
 	combined = src
 	if add == "" {
 		return
-	}
-	srcLen := len(src)
-	if srcLen > 0 {
+	} else if src == "" {
+		return add
+	} else if last := len(src) - 1; last >= 0 {
 		switch {
 		case unicode.IsPunct(rune(add[0])):
 		case unicode.IsSpace(rune(add[0])):
-		case unicode.IsSpace(rune(src[srcLen-1])):
+		case unicode.IsSpace(rune(src[last])):
 		default:
 			combined += " "
 		}
@@ -270,14 +203,21 @@ func AppendWithSpace(src, add string) (combined string) {
 	return
 }
 
+// TrimPrefixes trims the first path prefix matching value, used to prune known
+// things from arbitrary path strings which may or may not be prefixed with any
+// of the prefixes given
 func TrimPrefixes(value string, prefixes ...string) (trimmed string) {
 	trimmed = value
 	for _, prefix := range prefixes {
-		trimmed = strings.TrimPrefix(trimmed, "/")
-		trimmed = strings.TrimPrefix(trimmed, prefix)
-		trimmed = strings.TrimPrefix(trimmed, "/")
-		if trimmed != value {
+		if len(trimmed) > 0 && trimmed[0] == '/' {
+			trimmed = trimmed[1:]
+		}
+		if check := strings.TrimPrefix(trimmed, prefix); trimmed != check {
 			// stop at the first trim
+			trimmed = check
+			if trimmed != "" && trimmed[0] == '/' {
+				trimmed = trimmed[1:]
+			}
 			return
 		}
 	}
