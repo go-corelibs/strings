@@ -150,8 +150,9 @@ func UniqueFromSpaceSep(value string, original []string) (updated []string) {
 	return
 }
 
+// Empty returns true if the string has a length of zero or is all spaces
 func Empty(value string) (empty bool) {
-	empty = strings.TrimSpace(value) == ""
+	empty = len(strings.TrimSpace(value)) == 0
 	return
 }
 
