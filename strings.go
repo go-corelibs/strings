@@ -163,15 +163,31 @@ func IsSpaceOrPunct[T rune | byte](value T) (is bool) {
 	return
 }
 
-// PruneTmplTags removes all go template statements, things wrapped in doubled
-// curly braces like: `{{ stuff }}`
-func PruneTmplTags(value string) (clean string) {
+// PruneTmplActions removes all go template action statements
+//
+// Note that this does not remove the content between if, else and end
+// statements. For example:
+//
+//	`{{ if ... }}stuff{{ else }}moar stuff{{ end }}.`
+//
+// Turns into:
+//
+//		`stuff moar stuff.`
+//	       ^
+//	       |
+//
+// Also note that PruneTmplActions takes care to not concatenate non-space text
+// when pruning surrounding actions though will allow punctuation, similarly to
+// AppendWithSpace.
+//
+// See: https://pkg.go.dev/text/template#hdr-Actions
+func PruneTmplActions(value string) (clean string) {
 	var stack []string
 	length := len(value)
 	for idx, r := range value {
-		var next uint8
+		var next rune
 		if idx < length-1 {
-			next = value[idx+1]
+			next = rune(value[idx+1])
 		}
 
 		// check if currently detecting things
@@ -183,6 +199,11 @@ func PruneTmplTags(value string) (clean string) {
 				if stack[current][last] == '}' {
 					// statement is now closed
 					stack, _ = slices.Pop(stack)
+					if next > 0 && !IsSpaceOrPunct(next) {
+						if end := len(clean) - 1; end > -1 && !unicode.IsSpace(rune(clean[end])) {
+							clean += " "
+						}
+					}
 					continue
 				}
 
@@ -197,7 +218,7 @@ func PruneTmplTags(value string) (clean string) {
 				if r != '{' {
 					// not actually a statement
 					if current == 0 {
-						// this is the top of the stack
+						// top of stack and not an action, keep as clean
 						clean += stack[current] + string(r)
 					}
 					stack, _ = slices.Pop(stack)
