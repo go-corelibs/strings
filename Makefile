@@ -2,6 +2,6 @@
 
 VERSION_TAGS += STRINGS
 STRINGS_MK_SUMMARY := go-corelibs/strings
-STRINGS_MK_VERSION := v1.1.0
+STRINGS_MK_VERSION := v1.1.1
 
 include CoreLibs.mk
