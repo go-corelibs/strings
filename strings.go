@@ -22,7 +22,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 
-	"github.com/go-corelibs/regexps"
+	"github.com/go-corelibs/slices"
 )
 
 // ToKebabs converts all the given strings to kebab-case
@@ -159,7 +159,59 @@ func Empty(value string) (empty bool) {
 // PruneTmplTags removes all go template statements, things wrapped in doubled
 // curly braces like: `{{ stuff }}`
 func PruneTmplTags(value string) (clean string) {
-	clean = regexps.RxTmplTags.ReplaceAllString(value, "")
+	var stack []string
+	length := len(value)
+	for idx, r := range value {
+		var next uint8
+		if idx < length-1 {
+			next = value[idx+1]
+		}
+
+		// check if currently detecting things
+		if current := len(stack) - 1; current > -1 {
+			last := len(stack[current]) - 1 // always >= 0
+
+			if r == '}' { // found closing curly brace
+
+				if stack[current][last] == '}' {
+					// statement is now closed
+					stack, _ = slices.Pop(stack)
+					continue
+				}
+
+			} else if r == '{' && next == '{' {
+
+				// opening within the opening
+				stack = append(stack, string(r))
+				continue
+
+			} else if last == 0 && stack[current][last] == '{' {
+				// looking for another opening curly brace
+				if r != '{' {
+					// not actually a statement
+					if current == 0 {
+						// this is the top of the stack
+						clean += stack[current] + string(r)
+					}
+					stack, _ = slices.Pop(stack)
+					continue
+				}
+			}
+
+			stack[current] += string(r)
+			continue
+		}
+
+		// not within a statement
+		if r == '{' {
+			// push curly brace onto the detection stack
+			stack = append(stack, string(r))
+		} else {
+			// non-statement text is clean
+			clean += string(r)
+		}
+
+	}
 	return
 }
 
