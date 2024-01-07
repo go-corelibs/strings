@@ -161,6 +161,16 @@ func IsSpaceOrPunct[T rune | byte](value T) (is bool) {
 	return
 }
 
+// IsLastSpace returns ok=true if the string has a length greater than zero
+// and space=true if the last rune is unicode.IsSpace
+func IsLastSpace(value string) (space, ok bool) {
+	last := len(value) - 1
+	if ok = last > -1; ok {
+		space = unicode.IsSpace(rune(value[last]))
+	}
+	return
+}
+
 // AppendWithSpace appends add to src with a space, ensuring that only one space
 // is separating the two given strings. If the add string starts with
 // punctuation, no space is used.
