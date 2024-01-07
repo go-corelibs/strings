@@ -252,8 +252,7 @@ func AppendWithSpace(src, add string) (combined string) {
 		return add
 	} else if last := len(src) - 1; last >= 0 {
 		switch {
-		case unicode.IsPunct(rune(add[0])):
-		case unicode.IsSpace(rune(add[0])):
+		case IsSpaceOrPunct(add[0]):
 		case unicode.IsSpace(rune(src[last])):
 		default:
 			combined += " "
