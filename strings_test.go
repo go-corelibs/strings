@@ -85,6 +85,19 @@ func TestStrings(t *testing.T) {
 	Convey("PruneTmpTags", t, func() {
 		So(PruneTmplTags(`{{ this }}`), ShouldEqual, "")
 		So(PruneTmplTags(`{ this }`), ShouldEqual, "{ this }")
+		So(PruneTmplTags(`This is multi-line text.
+This line has a single-line {{ "statement" -}}.
+This line has a multi-line {{
+  "statement"
+-}}.
+This line has a statement with valid curly braces within: {{
+	"{{ curly braces! }}"
+-}}.
+`), ShouldEqual, `This is multi-line text.
+This line has a single-line .
+This line has a multi-line .
+This line has a statement with valid curly braces within: .
+`)
 	})
 
 	Convey("AppendWithSpace", t, func() {
