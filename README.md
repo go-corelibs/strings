@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/go-corelibs/strings/graph/badge.svg?token=ekbgYsvk8Z)](https://codecov.io/gh/go-corelibs/strings)
 [![Go Report Card](https://goreportcard.com/badge/github.com/go-corelibs/strings)](https://goreportcard.com/report/github.com/go-corelibs/strings)
 
-# go-corelibs/strings - text and string-type utilities
+# strings - text and string-type utilities
 
 strings is a package for manipulating strings of text.
 
