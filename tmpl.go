@@ -15,8 +15,6 @@
 package strings
 
 import (
-	"unicode"
-
 	"github.com/go-corelibs/slices"
 )
 
@@ -55,9 +53,10 @@ func PruneTmplActions(value string) (clean string) {
 	var stack []string
 	length := len(value)
 	for idx, r := range value {
-		var next rune
+
+		var next uint8
 		if idx < length-1 {
-			next = rune(value[idx+1])
+			next = value[idx+1]
 		}
 
 		// check if currently detecting things
@@ -70,9 +69,7 @@ func PruneTmplActions(value string) (clean string) {
 					// statement is now closed
 					stack, _ = slices.Pop(stack)
 					if next > 0 && !IsSpaceOrPunct(next) {
-						if end := len(clean) - 1; end > -1 && !unicode.IsSpace(rune(clean[end])) {
-							clean += " "
-						}
+						clean = AddLastSpace(clean)
 					}
 					continue
 				}
@@ -104,11 +101,11 @@ func PruneTmplActions(value string) (clean string) {
 		if r == '{' {
 			// push curly brace onto the detection stack
 			stack = append(stack, string(r))
-		} else {
-			// non-statement text is clean
-			clean += string(r)
+			continue
 		}
 
+		// non-statement text is clean
+		clean += string(r)
 	}
 	return
 }
