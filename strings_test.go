@@ -83,9 +83,10 @@ func TestStrings(t *testing.T) {
 	})
 
 	Convey("PruneTmpTags", t, func() {
-		So(PruneTmplTags(`{{ this }}`), ShouldEqual, "")
-		So(PruneTmplTags(`{ this }`), ShouldEqual, "{ this }")
-		So(PruneTmplTags(`This is multi-line text.
+		So(PruneTmplActions(`{{ this }}`), ShouldEqual, "")
+		So(PruneTmplActions(`{ this }`), ShouldEqual, "{ this }")
+		So(PruneTmplActions(`{{ if }}stuff{{ else }}moar stuff{{ end }}.`), ShouldEqual, "stuff moar stuff.")
+		So(PruneTmplActions(`This is multi-line text.
 This line has a single-line {{ "statement" -}}.
 This line has a multi-line {{
   "statement"
