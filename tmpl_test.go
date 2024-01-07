@@ -28,4 +28,24 @@ func TestTmpl(t *testing.T) {
 		So(TrimTmplVar("$Name"), ShouldEqual, "Name")
 		So(TrimTmplVar("$.Name"), ShouldEqual, "Name")
 	})
+
+	Convey("PruneTmpTags", t, func() {
+		So(PruneTmplActions(`{{ this }}`), ShouldEqual, "")
+		So(PruneTmplActions(`{ this }`), ShouldEqual, "{ this }")
+		So(PruneTmplActions(`{{ if }}stuff{{ else }}moar stuff{{ end }}.`), ShouldEqual, "stuff moar stuff.")
+		So(PruneTmplActions(`This is multi-line text.
+This line has a single-line {{ "statement" -}}.
+This line has a multi-line {{
+  "statement"
+-}}.
+This line has a statement with valid curly braces within: {{
+	"{{ curly braces! }}"
+-}}.
+`), ShouldEqual, `This is multi-line text.
+This line has a single-line .
+This line has a multi-line .
+This line has a statement with valid curly braces within: .
+`)
+	})
+
 }
