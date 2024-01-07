@@ -171,6 +171,16 @@ func IsLastSpace(value string) (space, ok bool) {
 	return
 }
 
+// AddLastSpace will add a space to value if value is non-empty and the last
+// rune in value is not unicode.IsSpace
+func AddLastSpace(value string) (modified string) {
+	modified = value
+	if space, ok := IsLastSpace(value); ok && !space {
+		modified += " "
+	}
+	return
+}
+
 // AppendWithSpace appends add to src with a space, ensuring that only one space
 // is separating the two given strings. If the add string starts with
 // punctuation, no space is used.
