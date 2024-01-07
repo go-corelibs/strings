@@ -156,6 +156,13 @@ func Empty(value string) (empty bool) {
 	return
 }
 
+// IsSpaceOrPunct returns true if the value given is either unicode.IsSpace
+// or unicode.IsPunct
+func IsSpaceOrPunct[T rune | byte](value T) (is bool) {
+	is = unicode.IsSpace(rune(value)) || unicode.IsPunct(rune(value))
+	return
+}
+
 // PruneTmplTags removes all go template statements, things wrapped in doubled
 // curly braces like: `{{ stuff }}`
 func PruneTmplTags(value string) (clean string) {
