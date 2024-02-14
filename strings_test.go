@@ -70,6 +70,16 @@ func TestStrings(t *testing.T) {
 		So(TrimQuotes("`backtick`"), ShouldEqual, `backtick`)
 	})
 
+	Convey("Fancy Quotes", t, func() {
+		s, e, ok := IsQuotedFancy(`“fancy”`)
+		So(ok, ShouldBeTrue)
+		So(s, ShouldEqual, '“')
+		So(e, ShouldEqual, '”')
+		for _, pair := range gFancyQuotes {
+			So(TrimQuotes(string(pair.s)+"fancy"+string(pair.e)), ShouldEqual, `fancy`)
+		}
+	})
+
 	Convey("UniqueFromSpaceSep", t, func() {
 		So(UniqueFromSpaceSep("one  two", []string{"a", "one"}), ShouldEqual, []string{
 			"a", "one", "two",
