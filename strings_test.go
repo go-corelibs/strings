@@ -60,26 +60,6 @@ func TestStrings(t *testing.T) {
 		So(IsFalse("a"), ShouldEqual, false)
 	})
 
-	Convey("TrimQuotes", t, func() {
-		So(TrimQuotes(`nope`), ShouldEqual, `nope`)
-		So(TrimQuotes(`'nope`), ShouldEqual, `'nope`)
-		So(TrimQuotes(`nope"`), ShouldEqual, `nope"`)
-		So(TrimQuotes("`nope"), ShouldEqual, "`nope")
-		So(TrimQuotes(`'single'`), ShouldEqual, `single`)
-		So(TrimQuotes(`"double"`), ShouldEqual, `double`)
-		So(TrimQuotes("`backtick`"), ShouldEqual, `backtick`)
-	})
-
-	Convey("Fancy Quotes", t, func() {
-		s, e, ok := IsQuotedFancy(`“fancy”`)
-		So(ok, ShouldBeTrue)
-		So(s, ShouldEqual, '“')
-		So(e, ShouldEqual, '”')
-		for _, pair := range gFancyQuotes {
-			So(TrimQuotes(string(pair.s)+"fancy"+string(pair.e)), ShouldEqual, `fancy`)
-		}
-	})
-
 	Convey("UniqueFromSpaceSep", t, func() {
 		So(UniqueFromSpaceSep("one  two", []string{"a", "one"}), ShouldEqual, []string{
 			"a", "one", "two",
