@@ -119,6 +119,55 @@ func IsQuoted(maybeQuoted string) (quoted bool) {
 	return
 }
 
+var (
+	gFancyQuotes = []struct {
+		s rune
+		e rune
+	}{
+		{s: '“', e: '”'},
+		{s: '‘', e: '’'},
+		{s: '‹', e: '›'},
+		{s: '«', e: '»'},
+		{s: '»', e: '«'},
+		{s: '„', e: '“'},
+		{s: '„', e: '”'},
+		{s: '「', e: '」'},
+		{s: '『', e: '』'},
+	}
+)
+
+// IsQuotedFancy finds the starting and ending runes, returning true if they
+// match any of the following pairs of quotations:
+//
+//	| start | end |
+//	|-------|-----|
+//	|   “   |  ”  |
+//	|   ‘   |  ’  |
+//	|   ‹   |  ›  |
+//	|   «   |  »  |
+//	|   »   |  «  |
+//	|   „   |  “  |
+//	|   „   |  ”  |
+//	|   「  |  」 |
+//	|   『  |  』 |
+func IsQuotedFancy(maybeQuoted string) (start, end rune, quoted bool) {
+	if last := len(maybeQuoted) - 1; last >= 1 {
+		for idx, r := range maybeQuoted {
+			if idx == 0 {
+				start = r
+			} else {
+				end = r
+			}
+		}
+		for _, pair := range gFancyQuotes {
+			if quoted = start == pair.s && end == pair.e; quoted {
+				return
+			}
+		}
+	}
+	return
+}
+
 // TrimQuotes returns the string with the first and last characters trimmed from the string if the string IsQuoted and
 // returns the unmodified input string otherwise
 func TrimQuotes(maybeQuoted string) (unquoted string) {
