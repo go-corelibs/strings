@@ -104,7 +104,7 @@ func IsFalse(text string) bool {
 // IsQuoted returns true if the first and last characters in the input are the same and are one of the three main quote
 // types: single ('), double (") and literal (`)
 func IsQuoted(maybeQuoted string) (quoted bool) {
-	if total := len(maybeQuoted); total > 2 {
+	if total := len(maybeQuoted); total >= 2 {
 		// there's enough length for quotes to be possible
 		if last := total - 1; maybeQuoted[0] == maybeQuoted[last] {
 			// the first and last characters are the same
