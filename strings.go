@@ -174,6 +174,10 @@ func TrimQuotes(maybeQuoted string) (unquoted string) {
 	if IsQuoted(maybeQuoted) {
 		unquoted = maybeQuoted[1 : len(maybeQuoted)-1]
 		return
+	} else if s, e, ok := IsQuotedFancy(maybeQuoted); ok {
+		unquoted = strings.TrimPrefix(maybeQuoted, string(s))
+		unquoted = strings.TrimSuffix(unquoted, string(e))
+		return
 	}
 	unquoted = maybeQuoted
 	return
