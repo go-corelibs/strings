@@ -85,4 +85,37 @@ func TestStrings(t *testing.T) {
 		So(TrimPrefixes("/one/two"), ShouldEqual, "/one/two")
 		So(TrimPrefixes("/one", "one"), ShouldEqual, "")
 	})
+
+	Convey("Carve", t, func() {
+		checks := []struct {
+			src, start, end string
+			b, m, a         string
+			ok              bool
+		}{
+			{
+				"one two more", " ", " ",
+				"one", "two", "more",
+				true,
+			},
+			{
+				"one {{ two more }}", "{{", "}}",
+				"one ", " two more ", "",
+				true,
+			},
+			{
+				"one { nope }", "{{", "}}",
+				"one { nope }", "", "",
+				false,
+			},
+		}
+
+		for _, check := range checks {
+			b, m, a, ok := Carve(check.src, check.start, check.end)
+			So(b, ShouldEqual, check.b)
+			So(m, ShouldEqual, check.m)
+			So(a, ShouldEqual, check.a)
+			So(ok, ShouldEqual, check.ok)
+		}
+
+	})
 }
