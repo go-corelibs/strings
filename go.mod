@@ -1,6 +1,6 @@
 module github.com/go-corelibs/strings
 
-go 1.21.5
+go 1.21.6
 
 require (
 	github.com/amonsat/fullname_parser v0.0.0-20180221140204-0879740fa92c
