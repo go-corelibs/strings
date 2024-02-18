@@ -4,9 +4,8 @@ package strings
 func Scan(src, sep string) (before, after string, found bool) {
 
 	s := struct {
-		quote   rune
-		quoted  bool
-		escaped bool
+		quote  rune
+		quoted bool
 	}{}
 
 	runes := []rune(src)
@@ -15,36 +14,35 @@ func Scan(src, sep string) (before, after string, found bool) {
 	for idx := 0; idx < total; idx++ {
 
 		r := runes[idx]
-		if r == '\\' {
-			s.escaped = true
-			continue
-		}
 
-		if IsQuote(r) {
+		if r == '\\' {
+			// next character is escaped, skip
+			idx += 1
+			continue
+		} else if IsQuote(r) {
+			// this character is a double, single or backtick quotation detected
 			if s.quoted {
+				// scanning within a quoted string
 				if s.quote == r {
+					// this character is the ending quotation
 					s.quote = 0
 					s.quoted = false
 				}
-			} else {
-				s.quote = r
-				s.quoted = true
+				// nothing to do with quoted contents
+				continue
 			}
+			// this character is a starting quotation
+			s.quote = r
+			s.quoted = true
 			continue
 		} else if s.quoted {
+			// nothing to do with quoted contents
 			continue
-		}
-
-		if remainder := total - idx; size > remainder {
+		} else if remainder := total - idx; size > remainder {
+			// early out, not enough characters for sep matching
 			break
-		}
-
-		if s.escaped {
-			s.escaped = false
-			continue
-		}
-
-		if found = src[idx:idx+size] == sep; found {
+		} else if found = src[idx:idx+size] == sep; found {
+			// sep match found, Scan complete
 			before = src[:idx]
 			after = src[idx+size:]
 			return

@@ -25,37 +25,56 @@ func TestScan(t *testing.T) {
 
 	Convey("Scan", t, func() {
 		checks := []struct {
+			label     string
 			src, text string
 			b, a      string
 			ok        bool
 		}{
 			{
+				"single space sep",
 				"one two more", " ",
 				"one", "two more",
 				true,
 			},
 			{
+				"opening template curly braces",
 				"one {{ two more }}", "{{",
 				"one ", " two more }}",
 				true,
 			},
 			{
+				"not opening template curly braces",
 				"one { nope }", "}}",
 				"one { nope }", "",
 				false,
 			},
 			{
+				"escaped closing template curly braces",
 				`"two {{more}}" \}} }} after`, "}}",
 				`"two {{more}}" \}} `, ` after`,
+				true,
+			},
+			{
+				"escaped double-quotes, closing template curly braces",
+				`"two \"{{more}}\"" \}} }} after`, "}}",
+				`"two \"{{more}}\"" \}} `, ` after`,
+				true,
+			},
+			{
+				"escape escaped double-quotes, closing template curly braces",
+				`"two \\\"{{more}}\\\"" \}} }} after`, "}}",
+				`"two \\\"{{more}}\\\"" \}} `, ` after`,
 				true,
 			},
 		}
 
 		for _, check := range checks {
-			b, a, ok := Scan(check.src, check.text)
-			So(b, ShouldEqual, check.b)
-			So(a, ShouldEqual, check.a)
-			So(ok, ShouldEqual, check.ok)
+			Convey(check.label, func() {
+				b, a, ok := Scan(check.src, check.text)
+				So(b, ShouldEqual, check.b)
+				So(a, ShouldEqual, check.a)
+				So(ok, ShouldEqual, check.ok)
+			})
 		}
 
 	})
