@@ -38,3 +38,19 @@ func ScanCarve(src, start, end string) (before, middle, after string, found bool
 	before = src
 	return
 }
+
+// ScanBothCarve is like ScanCarve except that ScanBothCarve ignores quoted
+// and escaped sequences when searching for both the `start` and `end`
+func ScanBothCarve(src, start, end string) (before, middle, after string, found bool) {
+	var b0, a0, b1, a1 string
+	if b0, a0, found = Scan(src, start); found {
+		if b1, a1, found = Scan(a0, end); found {
+			before = b0
+			middle = b1
+			after = a1
+			return
+		}
+	}
+	before = src
+	return
+}

@@ -94,6 +94,54 @@ func TestCarve(t *testing.T) {
 
 	})
 
+	Convey("ScanBothCarve", t, func() {
+		checks := []struct {
+			src, start, end string
+			b, m, a         string
+			ok              bool
+		}{
+			{
+				"one two more", " ", " ",
+				"one", "two", "more",
+				true,
+			},
+			{
+				"one {{ two more }}", "{{", "}}",
+				"one ", " two more ", "",
+				true,
+			},
+			{
+				"one { nope }", "{{", "}}",
+				"one { nope }", "", "",
+				false,
+			},
+			{
+				`two {{ "{{more}}" \}} }} after`, "{{", "}}",
+				`two `, ` "{{more}}" \}} `, ` after`,
+				true,
+			},
+			{
+				`two "{{more}}" {{ \}} }} after`, "{{", "}}",
+				`two "{{more}}" `, ` \}} `, ` after`,
+				true,
+			},
+			{
+				`two "/* */" /* {{more}} */ after`, "/*", "*/",
+				`two "/* */" `, ` {{more}} `, ` after`,
+				true,
+			},
+		}
+
+		for _, check := range checks {
+			b, m, a, ok := ScanBothCarve(check.src, check.start, check.end)
+			So(b, ShouldEqual, check.b)
+			So(m, ShouldEqual, check.m)
+			So(a, ShouldEqual, check.a)
+			So(ok, ShouldEqual, check.ok)
+		}
+
+	})
+
 }
 
 func BenchmarkScanCarve(b *testing.B) {
