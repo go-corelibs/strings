@@ -121,7 +121,15 @@ func UniqueFromSpaceSep(value string, original []string) (updated []string) {
 
 // Empty returns true if the string has a length of zero or is all spaces
 func Empty(value string) (empty bool) {
-	empty = len(strings.TrimSpace(value)) == 0
+	if empty = len(value) == 0; empty {
+		return
+	}
+	runes := []rune(value)
+	for _, r := range runes {
+		if empty = unicode.IsSpace(r); !empty {
+			return
+		}
+	}
 	return
 }
 
