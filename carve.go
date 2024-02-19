@@ -23,8 +23,7 @@ func Carve(src, start, end string) (before, middle, after string, found bool) {
 }
 
 // ScanCarve is like Carve except that ScanCarve ignores quoted and escaped
-// sequences when searching for the `end`, allowing for a more sane parsing
-// of go templates for example
+// sequences when searching for the `end`
 func ScanCarve(src, start, end string) (before, middle, after string, found bool) {
 	var b0, a0, b1, a1 string
 	if b0, a0, found = strings.Cut(src, start); found {
