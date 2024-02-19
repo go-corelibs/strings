@@ -79,6 +79,59 @@ func TestScan(t *testing.T) {
 
 	})
 
+	Convey("ScanQuote", t, func() {
+		cases := []struct {
+			input   string
+			b, q, a string
+			found   bool
+		}{
+			{
+				`not a quote`,
+				"not a quote", "", "", false,
+			},
+			{
+				`"quoted"`,
+				"", "quoted", "", true,
+			},
+			{
+				`before "quoted"`,
+				"before ", "quoted", "", true,
+			},
+			{
+				`"quoted" after`,
+				"", "quoted", " after", true,
+			},
+			{
+				`before "quoted" after`,
+				"before ", "quoted", " after", true,
+			},
+			{
+				`before "quoted \"within\"" after`,
+				"before ", `quoted "within"`, " after", true,
+			},
+			{
+				`before "quoted 'within'" after`,
+				"before ", `quoted 'within'`, " after", true,
+			},
+			{
+				`before 'quoted "within"' after`,
+				"before ", `quoted "within"`, " after", true,
+			},
+			{
+				"before `quoted \"within\"` after",
+				"before ", `quoted "within"`, " after", true,
+			},
+		}
+
+		for _, check := range cases {
+			before, quoted, after, found := ScanQuote(check.input)
+			So(found, ShouldEqual, check.found)
+			So(before, ShouldEqual, check.b)
+			So(quoted, ShouldEqual, check.q)
+			So(after, ShouldEqual, check.a)
+		}
+	})
+
 }
 
 func BenchmarkScan(b *testing.B) {

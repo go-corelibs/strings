@@ -14,6 +14,10 @@
 
 package strings
 
+import (
+	"strconv"
+)
+
 // Scan is a text scanner which looks for unquoted and unescaped `sep`
 func Scan(src, sep string) (before, after string, found bool) {
 
@@ -65,4 +69,72 @@ func Scan(src, sep string) (before, after string, found bool) {
 	}
 
 	return src, "", false
+}
+
+// ScanQuote looks for the first single, double or backtick quoted text,
+// returning the `before`, `quoted` and `after` strings if `found`. Note that
+// the `quoted` string is unquoted (and unescaped). Use strconv.Quote to
+// restore double-quoting
+func ScanQuote(src string) (before, quoted, after string, found bool) {
+
+	s := struct {
+		quote  rune
+		quoted bool
+	}{}
+
+	runes := []rune(src)
+	total := len(runes)
+
+	for idx := 0; idx < total; idx++ {
+
+		r := runes[idx]
+
+		if r == '\\' {
+			// next character is escaped, skip
+			if s.quoted {
+				quoted += string(r)
+				if idx+1 < total {
+					quoted += string(runes[idx+1])
+				}
+			}
+			idx += 1
+			continue
+		} else if IsQuote(r) {
+			// this character is a double, single or backtick quotation detected
+			if s.quoted {
+				// scanning within a quoted string
+				if found = s.quote == r; found {
+					// this character is the ending quotation
+					s.quoted = false
+					if idx < total-1 {
+						after = string(runes[idx+1:])
+					}
+					break
+				}
+				// nothing to do with quoted contents
+				quoted += string(r)
+				continue
+			}
+			// this character is a starting quotation
+			s.quote = r
+			s.quoted = true
+			continue
+		} else if s.quoted {
+			// keep quoted contents
+			quoted += string(r)
+			continue
+		} else {
+			before += string(r)
+		}
+
+	}
+
+	if found {
+		if unquoted, err := strconv.Unquote(string(s.quote) + quoted + string(s.quote)); err == nil {
+			quoted = unquoted
+		}
+		return
+	}
+
+	return src, "", "", false
 }
