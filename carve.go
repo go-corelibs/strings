@@ -8,6 +8,9 @@ import (
 // "before carve", "middle of start/end range" and "after carve" segments. If
 // the `start` and `end` range is not `found` then the `before` will contain
 // the entire `src` input
+//
+// Carve is based on two calls to [strings.Cut], one for the `start` and again
+// for the `end`
 func Carve(src, start, end string) (before, middle, after string, found bool) {
 	var b0, a0, b1, a1 string
 	if b0, a0, found = strings.Cut(src, start); found {
@@ -22,8 +25,8 @@ func Carve(src, start, end string) (before, middle, after string, found bool) {
 	return
 }
 
-// ScanCarve is like Carve except that ScanCarve ignores quoted and escaped
-// sequences when searching for the `end`
+// ScanCarve is like Carve except that ScanCarve uses Scan instead of [strings.Cut]
+// for finding the `end` separator
 func ScanCarve(src, start, end string) (before, middle, after string, found bool) {
 	var b0, a0, b1, a1 string
 	if b0, a0, found = strings.Cut(src, start); found {
@@ -38,8 +41,8 @@ func ScanCarve(src, start, end string) (before, middle, after string, found bool
 	return
 }
 
-// ScanBothCarve is like ScanCarve except that ScanBothCarve ignores quoted
-// and escaped sequences when searching for both the `start` and `end`
+// ScanBothCarve is like ScanCarve except that ScanBothCarve uses Scan to find
+// both the `start` and `end` separators
 func ScanBothCarve(src, start, end string) (before, middle, after string, found bool) {
 	var b0, a0, b1, a1 string
 	if b0, a0, found = Scan(src, start); found {
