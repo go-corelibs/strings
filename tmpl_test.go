@@ -23,6 +23,8 @@ import (
 func TestTmpl(t *testing.T) {
 	Convey("TrimTmplVar", t, func() {
 		So(TrimTmplVar(""), ShouldEqual, "")
+		So(TrimTmplVar("."), ShouldEqual, "")
+		So(TrimTmplVar("$"), ShouldEqual, "")
 		So(TrimTmplVar("Name"), ShouldEqual, "Name")
 		So(TrimTmplVar(".Name"), ShouldEqual, "Name")
 		So(TrimTmplVar("$Name"), ShouldEqual, "Name")

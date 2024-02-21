@@ -23,7 +23,7 @@ func TrimTmplVar(name string) (trimmed string) {
 	// prepare the trimmed output
 	if trimmed = name[:]; len(name) > 0 {
 		// while trimmed has a first rune and it is either dollar or dot
-		for size := len(trimmed); size > 0 && (trimmed[0] == '$' || trimmed[0] == '.'); {
+		for size := len(trimmed); size > 0 && (trimmed[0] == '$' || trimmed[0] == '.'); size = len(trimmed) {
 			// trim the first rune
 			trimmed = trimmed[1:]
 		}
