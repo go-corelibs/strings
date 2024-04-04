@@ -16,6 +16,7 @@ package strings
 
 import (
 	"math/rand"
+	"strings"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -132,6 +133,31 @@ func TestScan(t *testing.T) {
 		}
 	})
 
+	Convey("ScanLine", t, func() {
+		tests := []struct {
+			label  string
+			source string
+			line   int
+			ok     bool
+			expect string
+		}{
+			{"line 0", gScanTestingParagraph, 0, true, ``},
+			{"line 1", gScanTestingParagraph, 1, true, ``},
+			{"line 2", gScanTestingParagraph, 2, true, `"quoted {{text}}" escaped \}} and actual }}`},
+			{"line 10", gScanTestingParagraph, 10, false, ``},
+			{`only one line`, `only one line`, 1, true, `only one line`},
+			{`not a line`, `only one line`, 2, false, ``},
+			{`cr-lf`, "first line\r\nsecond line\r\n", 0, true, `first line`},
+		}
+		for _, test := range tests {
+			Convey(test.label, func() {
+				text, ok := ScanLine(test.source, test.line)
+				So(ok, ShouldEqual, test.ok)
+				So(text, ShouldEqual, test.expect)
+			})
+		}
+	})
+
 }
 
 func BenchmarkScan(b *testing.B) {
@@ -139,6 +165,14 @@ func BenchmarkScan(b *testing.B) {
 		end := rand.Intn(gScanTestingParagraphLen)
 		src := gScanTestingParagraph[:end]
 		_, _, _ = Scan(src, "}}")
+	}
+}
+
+func BenchmarkScanLine(b *testing.B) {
+	text := strings.Repeat(gScanTestingParagraph, 10)
+	count := strings.Count(text, "\n")
+	for i := 0; i < 1000; i++ {
+		_, _ = ScanLine(text, rand.Intn(count))
 	}
 }
 

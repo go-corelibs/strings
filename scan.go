@@ -138,3 +138,40 @@ func ScanQuote(src string) (before, quoted, after string, found bool) {
 
 	return src, "", "", false
 }
+
+// ScanLine searches for newline characters, counting up to the desired line
+// number and returns just the text for that line. The line number starts at
+// one, not zero
+func ScanLine(source string, line int) (text string, ok bool) {
+	if line == 0 {
+		line = 1
+	}
+	var count, start, end = 1, -1, -1
+	if ok = line == 1; ok {
+		start = 0
+	}
+	for idx, r := range source {
+		if r == '\n' {
+			if ok {
+				end = idx
+				break
+			}
+			count += 1
+			if ok = count == line; ok {
+				start = idx + 1
+				continue
+			}
+		}
+	}
+	if ok = start > -1; ok {
+		if end > -1 {
+			text = source[start:end]
+		} else {
+			text = source[start:]
+		}
+		if size := len(text); size > 0 && text[size-1] == '\r' {
+			text = text[:size-1]
+		}
+	}
+	return
+}
