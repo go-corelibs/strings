@@ -25,4 +25,10 @@ func TestSpaces(t *testing.T) {
 		So(PruneSpaces("one two"), ShouldEqual, "onetwo")
 		So(PruneSpaces("  one    two   "), ShouldEqual, "onetwo")
 	})
+
+	Convey("CollapseSpaces", t, func() {
+		So(CollapseSpaces("  one  two  "), ShouldEqual, " one two ")
+		So(CollapseSpaces("    one     two    "), ShouldEqual, " one two ")
+		So(CollapseSpaces("\tone\ntwo\t\t"), ShouldEqual, "\tone\ntwo\t\t")
+	})
 }

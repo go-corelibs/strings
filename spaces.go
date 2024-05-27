@@ -28,3 +28,28 @@ func PruneSpaces(input string) (pruned string) {
 	}
 	return
 }
+
+// CollapseSpaces returns the input string with all consecutive space
+// characters collapsed to just one space character (tabs are not considered
+// spaces)
+func CollapseSpaces(input string) (collapsed string) {
+	var skip bool
+	for _, r := range input {
+
+		if r == ' ' {
+			// found a space
+			if skip {
+				// already added, keep skipping spaces
+				continue
+			}
+			// collapse any further spaces
+			skip = true
+		} else if skip {
+			// stop collapsing spaces
+			skip = false
+		}
+
+		collapsed += string(r)
+	}
+	return
+}
