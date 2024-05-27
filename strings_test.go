@@ -86,4 +86,10 @@ func TestStrings(t *testing.T) {
 		So(TrimPrefixes("/one", "one"), ShouldEqual, "")
 	})
 
+	Convey("PruneSet", t, func() {
+		So(PruneSet("hello", 'h', 'e', 'l'), ShouldEqual, "o")
+		So(PruneSet("hello", 'w', 'o', 'r', 'l', 'd'), ShouldEqual, "he")
+		So(PruneSet("hello\nworld", '\n'), ShouldEqual, "helloworld")
+	})
+
 }

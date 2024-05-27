@@ -220,3 +220,17 @@ func TrimPrefixes(value string, prefixes ...string) (trimmed string) {
 	}
 	return
 }
+
+// PruneSet returns the source string without any of the given runes
+func PruneSet(source string, runes ...rune) (pruned string) {
+	lookup := make(map[rune]struct{})
+	for _, r := range runes {
+		lookup[r] = struct{}{}
+	}
+	for _, r := range source {
+		if _, skip := lookup[r]; !skip {
+			pruned += string(r)
+		}
+	}
+	return
+}
