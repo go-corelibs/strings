@@ -19,6 +19,7 @@ import (
 )
 
 // PruneSpaces returns the input string without any space characters
+// as defined by unicode.IsSpace
 func PruneSpaces(input string) (pruned string) {
 	for _, r := range []rune(input) {
 		if !unicode.IsSpace(r) {
