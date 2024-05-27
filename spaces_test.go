@@ -23,5 +23,6 @@ import (
 func TestSpaces(t *testing.T) {
 	Convey("PruneSpaces", t, func() {
 		So(PruneSpaces("one two"), ShouldEqual, "onetwo")
+		So(PruneSpaces("  one    two   "), ShouldEqual, "onetwo")
 	})
 }
