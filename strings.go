@@ -21,6 +21,8 @@ import (
 	"unicode"
 
 	"github.com/iancoleman/strcase"
+
+	"github.com/go-corelibs/values"
 )
 
 // ToKebabs converts all the given strings to kebab-case
@@ -64,39 +66,19 @@ func QuoteJsonValue(value string) (out string) {
 	return
 }
 
-// IsTrue returns true if the text given is a truthy word or any positive number
+// IsTrue is a wrapper around values.IsTrue
 //
-// Truthy words:
-//
-//	"true", "t", "yes", "y" and "on"
+// Deprecated: please use values.IsTruthy instead
 func IsTrue(text string) bool {
-	switch strings.ToLower(text) {
-	case "true", "yes", "on", "1", "t", "y":
-		return true
-	}
-	if v, err := strconv.Atoi(text); err == nil {
-		return v > 0
-	} else if f, err := strconv.ParseFloat(text, 64); err == nil {
-		return f > 0.0
-	}
-	return false
+	return values.IsTrue(text)
 }
 
-// IsFalse returns true if the text given is a (case-insensitive) falsey word
-// or a number that is less than or equal to zero.
+// IsFalse is a wrapper around values.IsTruthy with the state inverted
 //
-// Falsey words is:
-//
-//	"false", "f", "no", "n" and "off"
+// Deprecated: please use values.IsTruthy instead
 func IsFalse(text string) bool {
-	switch strings.ToLower(text) {
-	case "false", "no", "off", "0", "f", "n", "":
-		return true
-	}
-	if v, err := strconv.Atoi(text); err == nil {
-		return v <= 0
-	} else if f, err := strconv.ParseFloat(text, 64); err == nil {
-		return f <= 0.0
+	if state, ok := values.IsTruthy(text); ok {
+		return !state
 	}
 	return false
 }
