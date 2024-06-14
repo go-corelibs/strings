@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/amonsat/fullname_parser v0.0.0-20180221140204-0879740fa92c
 	github.com/go-corelibs/slices v1.6.1
-	github.com/go-corelibs/values v1.2.0
+	github.com/go-corelibs/values v1.2.1
 	github.com/iancoleman/strcase v0.3.0
 	github.com/maruel/natural v1.1.1
 	github.com/smartystreets/goconvey v1.8.1
